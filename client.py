@@ -14,6 +14,11 @@ def serverListen(serverSocket):
             serverSocket.send(bytes(".", "utf-8"))
             response = serverSocket.recv(1024).decode("utf-8")
             print(response)
+        elif msg == "/messageSend":
+            serverSocket.send(bytes(state["userInput"], "utf-8"))
+            state["sendMessageLock"].release()
+        else:
+            print(msg)
 
 
 
@@ -24,8 +29,9 @@ def userInput(serverSocket):
         state["sendMessageLock"].release()
         with state["inputCondition"]:
             state["inputCondition"].notify()
-        if state["userInput"] == "/1":
-            serverSocket.send(b"/getIP")
+        if state["inputMessage"]:
+            state["sendMessageLock"].acquire()
+            serverSocket.send(b"/messageSend")
 
 
 

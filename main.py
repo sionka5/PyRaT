@@ -37,20 +37,14 @@ class Group:
 
 
 
-def pyconChat(client, username, groupname):
+
+def pyRaT(client, username, groupname):
     while True:
         msg = client.recv(1024).decode("utf-8")
-        if msg == "/getIP":
-            client.send(b"/getIP")
-            client.recv(1024).decode("utf-8")
-            print("getIP command invoked")
-            message = "./ip"
-            user = groups[groupname].admin
+        if msg == "/messageSend":
+            client.send(b"/messageSend")
+            message = client.recv(1024).decode("utf-8")
             groups[groupname].sendMessage(message, username)
-            groups[groupname].sendMessage("./passed", username)
-            response = client.recv(1024).decode("utf-8")
-            client.send(bytes("ip: " + response, "utf-8"))
-            print(groups[groupname].admin)
 
 def handshake(client):
     username = client.recv(1024).decode("utf-8")
@@ -60,10 +54,10 @@ def handshake(client):
         groups[groupname].connect(username, client)
         client.send(b"/ready")
         print("User Connected:", username, "| Group:", groupname)
-        threading.Thread(target=pyconChat, args=(client, username, groupname,)).start()
+        threading.Thread(target=pyRaT, args=(client, username, groupname,)).start()
     else:
         groups[groupname] = Group(username, client)
-        threading.Thread(target=pyconChat, args=(client, username, groupname,)).start()
+        threading.Thread(target=pyRaT, args=(client, username, groupname,)).start()
         client.send(b"/adminReady")
         print("New Group:", groupname, "| Admin:", username)
 
@@ -72,7 +66,7 @@ def main():
     listenSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     listenSocket.bind(("localhost", 8000))
     listenSocket.listen(10)
-    print("PyconChat Server running")
+    print("PyRaT Server running")
     while True:
         client, _ = listenSocket.accept()
         threading.Thread(target=handshake, args=(client,)).start()
