@@ -58,7 +58,7 @@ def waitUserInput(serverSocket):
 def main():
 
     serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    serverSocket.connect(("localhost", 8000))
+    serverSocket.connect(("139.144.79.212", 8000))
     state["inputCondition"] = threading.Condition()
     state["sendMessageLock"] = threading.Lock()
     state["username"] = input("username: ")

