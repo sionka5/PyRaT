@@ -5,7 +5,7 @@ import os
 import sys
 
 groups = {}
-
+agroups = []
 
 class Group:
     def __init__(self, admin, client):
@@ -47,6 +47,14 @@ def pyRaT(client, username, groupname):
             groups[groupname].sendMessage(message, username)
 
 def handshake(client):
+    if len(agroups) > 0:
+        gr = " "
+        for x in agroups:
+            gr += "\n" + x
+        client.send(bytes(gr, "utf-8"))
+    else:
+        client.send(bytes("no sessions available.", "utf-8"))
+
     username = client.recv(1024).decode("utf-8")
     client.send(b"/sendGroupname")
     groupname = client.recv(1024).decode("utf-8")
@@ -57,9 +65,11 @@ def handshake(client):
         threading.Thread(target=pyRaT, args=(client, username, groupname,)).start()
     else:
         groups[groupname] = Group(username, client)
+        agroups.append(groupname)
         threading.Thread(target=pyRaT, args=(client, username, groupname,)).start()
         client.send(b"/adminReady")
         print("New Group:", groupname, "| Admin:", username)
+
 
 
 def main():
@@ -71,6 +81,14 @@ def main():
         client, _ = listenSocket.accept()
         threading.Thread(target=handshake, args=(client,)).start()
 
+def servercommands():
+    print("""
+    Available commands: 
+    
+    
+    
+        """)
 
 if __name__ == "__main__":
-    main()
+    threading.Thread(target=main).start()
+    #threading.Thread(target=servercommands).start()
