@@ -46,6 +46,7 @@ def pyRaT(client, username, groupname):
             message = client.recv(1024).decode("utf-8")
             groups[groupname].sendMessage(message, username)
 
+
 def handshake(client):
     if len(agroups) > 0:
         gr = " "

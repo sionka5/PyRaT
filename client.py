@@ -28,9 +28,9 @@ def userInput(serverSocket):
         Availabe commands: 
         getIP
         shell (command to execute in shell)
-        blockinput *curently not working*
-        unblockinput *curently not working*
-        getToken *curently not working*
+        blockinput *currently not working*
+        unblockinput *currently not working*
+        getToken *currently not working*
 
         """)
     while state["alive"]:
