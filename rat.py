@@ -7,7 +7,7 @@ import subprocess
 from time import sleep
 
 state = {}
-pcname = os.getenv('COMPUTERNAME')
+pcname = socket.gethostname()
 
 def shell(serverSocket, command: str):
 
