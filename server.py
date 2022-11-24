@@ -20,37 +20,38 @@ def sendCommand(command):
         current_session.send(bytes(f"{command}", "utf-8"))
     except:
         print("selected client is not longer available")
-        disconnect(current_session_username ,current_session)
+        disconnect()
 
-def disconnect(username, client):
+def disconnect():
 
-    sessions_sockets.remove(client)
+    sessions_sockets.remove(current_session)
 
-    sessions.pop(username)
+    sessions.pop(current_session_username)
 
-    sessions_list.remove(username)
+    sessions_list.remove(current_session_username)
 
 def selectSession(username):
 
-    print(f"username: {username}")
-    print(sessions_list)
-    print(sessions)
-    print(sessions_sockets)
-    print("//////////////////")
-    print(sessions.get(f"{username}"))
-    print("//////////////////")
+    #print(f"username: {username}")
+    #print(sessions_list)
+    #print(sessions)
+    #print(sessions_sockets)
+    #print("//////////////////")
+    #print(sessions.get(f"{username}"))
+    #print("//////////////////")
 
-
-    for i in sessions_sockets:
-        if i == sessions.get(f"{username}"):
-            print("socket matched!")
-            global current_session
-            current_session = i
-            global current_session_username
-            current_session_username = username
-            print("succesfully selected")
-            print(i)
-
+    try:
+        for i in sessions_sockets:
+            if i == sessions.get(f"{username}"):
+                print("socket matched!")
+                global current_session
+                current_session = i
+                global current_session_username
+                current_session_username = username
+                print("succesfully selected")
+                print(i)
+    except:
+        print("error")
 def handshake(client):
     username = client.recv(1024).decode("utf-8")
     print(username, " connected!")
@@ -91,12 +92,20 @@ def user_input():
             sendCommand(cmnd)
             response = current_session.recv(1024).decode("utf-8")
             print(response)
+        elif cmnd == "kill":
+            sendCommand("kill")
+            disconnect()
 
 
 
 
 
+        elif cmnd == "exit":
+            exit()
 
 
-threading.Thread(target=main, args=()).start()
-threading.Thread(target=user_input, args=()).start()
+
+if __name__ == '__main__':
+
+    threading.Thread(target=main, args=()).start()
+    threading.Thread(target=user_input, args=()).start()
