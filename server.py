@@ -1,6 +1,6 @@
 import socket
 import threading
-from collections import defaultdict
+
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 ip = "localhost"
@@ -101,7 +101,7 @@ def user_input():
 
 
         elif cmnd == "exit":
-            exit()
+           quit("user")
 
 
 

